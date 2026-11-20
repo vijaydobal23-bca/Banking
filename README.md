@@ -1,4 +1,4 @@
 # Banking
 banking application 
-transaction management and security
+transaction management and security.
 
