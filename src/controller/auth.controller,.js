@@ -1,6 +1,7 @@
 
 const userModel = require("../model/user.model");
 const jwt = require("jsonwebtoken");
+const { sendRegistrationEmail } = require("../services/mail.service");
 
 
 async function userRegisterController(req, res) {
@@ -25,6 +26,17 @@ async function userRegisterController(req, res) {
 
     const user = await userModel.create({ name, email, password });
 
+    let emailSent = true;
+    try {
+      await sendRegistrationEmail({ to: user.email, name: user.name });
+    } catch (mailError) {
+      emailSent = false;
+      console.error("Registration email could not be sent:", mailError.message);
+    }
+
+    // Never return the password hash in the API response.
+    user.password = undefined;
+
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
@@ -40,6 +52,7 @@ async function userRegisterController(req, res) {
     return res.status(201).json({
       message: "User registered successfully",
       success: true,
+      emailSent,
       user,
     });
 
